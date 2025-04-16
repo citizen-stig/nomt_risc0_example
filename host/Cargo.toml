@@ -9,4 +9,4 @@ risc0-zkvm = { version = "1.2.0" }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing = { version = "0.1.41" }
 serde = "1.0"
-nomt = { git = "https://github.com/thrumdev/nomt.git", rev = "834bc4f114bfc4ba0372a92bed75f02b9cdb2e76", default-features = false, features = ["sha2-hasher", "serde"] }
+nomt = { git = "https://github.com/thrumdev/nomt.git", rev = "4ba251f1e7b982b312f5c2b570f3f03f4bbb11ea", default-features = false, features = ["sha2-hasher", "serde"] }
