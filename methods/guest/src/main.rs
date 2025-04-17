@@ -6,6 +6,7 @@ use sha2::Digest;
 
 fn verify_nomt_witness() {
     let prev_root: nomt_core::trie::Node = env::read();
+    env::log(&format!("prev_root guest: {}", hex::encode(prev_root)));
     let witness: Witness = env::read();
 
     // Read as in example: https://github.com/thrumdev/nomt/blob/5111c2712a526882ae3aa8bf24be923e394d9fe9/examples/witness_verification/src/main.rs
@@ -81,13 +82,10 @@ fn verify_nomt_witness() {
     }
 
     let new_root = proof::verify_update::<Sha2Hasher>(prev_root, &updates).unwrap();
+    env::log(&format!("new_root guest: {}", hex::encode(new_root)));
     env::commit(&new_root);
 }
 
 fn main() {
-    // read the sample input
-    let _input: u32 = env::read();
-    // env::commit(&input);
-
     verify_nomt_witness();
 }

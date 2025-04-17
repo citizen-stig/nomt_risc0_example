@@ -6,12 +6,12 @@ use methods::{SOV_NOMT_RISC0_ELF, SOV_NOMT_RISC0_ID};
 use risc0_zkvm::{default_prover, ExecutorEnv};
 use sha2::Digest;
 
-const NOMT_DB_FOLDER: &str = "nomt_db";
-
 fn commit_batch() -> anyhow::Result<(Root, Root, Witness)> {
+    let dir = tempfile::tempdir()?;
+
     // Define the options used to open NOMT
     let mut opts = Options::new();
-    opts.path(NOMT_DB_FOLDER);
+    opts.path(dir.path().join("nomt_db"));
     opts.commit_concurrency(1);
 
     // Open NOMT database, it will create the folder if it does not exist
@@ -66,6 +66,9 @@ fn commit_batch() -> anyhow::Result<(Root, Root, Witness)> {
     let root = finished.root();
     finished.commit(&nomt)?;
 
+    tracing::info!("prev root host: {}", hex::encode(prev_root));
+    tracing::info!("new root host: {}", hex::encode(root));
+
     Ok((prev_root, root, witness))
 }
 
@@ -89,11 +92,7 @@ fn main() {
 
     let (prev_root, new_root, witness) = commit_batch().unwrap();
 
-    // For example:
-    let input: u32 = 15 * u32::pow(2, 27) + 1;
     let env = ExecutorEnv::builder()
-        .write(&input)
-        .unwrap()
         .write(&prev_root.into_inner())
         .unwrap()
         .write(&witness)
@@ -111,19 +110,17 @@ fn main() {
     // extract the receipt.
     let receipt = prove_info.receipt;
 
-    // TODO: Implement code for retrieving receipt journal here.
-
     // For example:
     // let _output: u32 = receipt.journal.decode().unwrap();
     let new_root_guest: [u8; 32] = receipt.journal.decode().expect("Failed to decode new root");
+    // The receipt was verified at the end of proving, but the below code is an
+    // example of how someone else could verify this receipt.
+    receipt.verify(SOV_NOMT_RISC0_ID).unwrap();
+    tracing::info!("Receipt verified successfully!");
     tracing::info!(
         "New root. Host: {}, Guest {}",
         hex::encode(new_root.as_ref()),
         hex::encode(&new_root_guest)
     );
-
-    // The receipt was verified at the end of proving, but the below code is an
-    // example of how someone else could verify this receipt.
-    receipt.verify(SOV_NOMT_RISC0_ID).unwrap();
-    tracing::info!("Receipt verified successfully!");
+    assert_eq!(new_root.into_inner(), new_root_guest);
 }
