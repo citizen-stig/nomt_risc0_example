@@ -1,8 +1,6 @@
-use nomt_core::trie::ValueHash;
 use nomt_core::witness::Witness;
 use nomt_core::{hasher::Sha2Hasher, proof, trie::LeafData};
 use risc0_zkvm::guest::env;
-use sha2::Digest;
 
 fn verify_nomt_witness() {
     let prev_root: nomt_core::trie::Node = env::read();
@@ -40,10 +38,10 @@ fn verify_nomt_witness() {
                 // Check for non-existence if the return value was None
                 None => assert!(verified.confirm_nonexistence(&read.key).unwrap()),
                 // Verify the correctness of the returned value when it is Some(_)
-                Some(ref v) => {
+                Some(value_hash) => {
                     let leaf = LeafData {
                         key_path: read.key,
-                        value_hash: sha2::Sha256::digest(v).into(),
+                        value_hash,
                     };
                     assert!(verified.confirm_value(&leaf).unwrap());
                 }
@@ -64,13 +62,7 @@ fn verify_nomt_witness() {
             .skip_while(|r| r.path_index != i)
             .take_while(|r| r.path_index == i)
         {
-            write_ops.push((
-                write.key,
-                write
-                    .value
-                    .as_ref()
-                    .map(|v| ValueHash::from(sha2::Sha256::digest(v))),
-            ));
+            write_ops.push((write.key, write.value));
         }
 
         if !write_ops.is_empty() {

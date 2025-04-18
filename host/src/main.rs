@@ -68,7 +68,7 @@ fn commit_batch() -> anyhow::Result<(Root, Root, Witness)> {
 
     tracing::info!("prev root host: {}", hex::encode(prev_root));
     tracing::info!("new root host: {}", hex::encode(root));
-
+    
     Ok((prev_root, root, witness))
 }
 
